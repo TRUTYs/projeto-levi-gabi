@@ -1,0 +1,75 @@
+from flask import Flask, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+
+# Configuração: Ajuste com os seus dados do MySQL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:senha@localhost/projeto'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# --- MODELOS (Refletindo o Banco Corrigido) ---
+
+class Fornecedor(db.Model):
+    __tablename__ = 'fornecedores'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nome = db.Column(db.String(50))
+    contato = db.Column(db.String(50))
+    telefone = db.Column(db.String(20))
+
+class Produto(db.Model):
+    __tablename__ = 'produtos'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nome = db.Column(db.String(50))
+    categoria = db.Column(db.String(50))
+    quantidade = db.Column(db.Integer, default=0)
+    estoque_minimo = db.Column(db.Integer, default=5)
+    preco_custo = db.Column(db.Numeric(10, 2))
+    preco_venda = db.Column(db.Numeric(10, 2))
+    fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedores.id'))
+
+class Alerta(db.Model):
+    __tablename__ = 'alertas'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'))
+    mensagem = db.Column(db.String(255))
+    resolvido = db.Column(db.Boolean, default=False)
+
+# --- ROTAS DA API ---
+
+@app.route('/api/estoque', methods=['GET'])
+def buscar_estoque():
+    """Retorna todos os produtos para a tela de Estoque.png"""
+    produtos = Produto.query.all()
+    return jsonify([{
+        "codigo": p.id,
+        "nome": p.nome,
+        "quantidade": p.quantidade,
+        "valor_unitario": float(p.preco_venda),
+        "alerta": p.quantidade <= p.estoque_minimo
+    } for p in produtos])
+
+@app.route('/api/venda', methods=['POST'])
+def registrar_venda():
+    """Lógica para diminuir stock e criar alertas automaticamente"""
+    dados = request.json
+    prod = Produto.query.get(dados['produto_id'])
+    
+    if prod and prod.quantidade >= dados['quantidade']:
+        prod.quantidade -= dados['quantidade']
+        
+        # Verificar se precisa de alerta
+        if prod.quantidade <= prod.estoque_minimo:
+            novo_alerta = Alerta(
+                produto_id=prod.id, 
+                mensagem=f"Stock baixo: {prod.nome} (Apenas {prod.quantidade} restantes)"
+            )
+            db.session.add(novo_alerta)
+            
+        db.session.commit()
+        return jsonify({"status": "sucesso", "novo_estoque": prod.quantidade})
+    
+    return jsonify({"status": "erro", "mensagem": "Stock insuficiente"}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)
