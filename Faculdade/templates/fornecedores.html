@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Fornecedores - Eight Sistemas</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; }
+        .header { background: white; border-bottom: 3px solid #3b4cca; padding: 20px; }
+        .container { padding: 40px; }
+        input { padding: 10px; width: 250px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; background: #2ecc71; color: white; border: none; cursor: pointer; font-weight: bold; }
+        table { width: 50%; margin: 20px auto; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; }
+        th { background: #3b4cca; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="float: left; text-decoration: none; font-weight: bold;">VOLTAR</a>
+        <h2>GESTÃO DE FORNECEDORES</h2>
+    </div>
+
+    <div class="container">
+        <form action="/cadastrar_fornecedor" method="POST">
+            <input type="text" name="nome_fornecedor" placeholder="Nome do Fornecedor (ex: Intel)" required>
+            <button type="submit">CADASTRAR</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NOME DO FORNECEDOR</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fornecedores %}
+                <tr>
+                    <td>{{ f.id }}</td>
+                    <td>{{ f.nome }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

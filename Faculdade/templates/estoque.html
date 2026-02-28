@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Estoque - Eight Sistemas</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
+        .header { background-color: white; border-bottom: 3px solid #3b4cca; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-buttons { display: flex; gap: 20px; padding: 20px 50px; }
+        .btn { padding: 10px 25px; border-radius: 15px; border: 3px solid; font-weight: bold; cursor: pointer; background: white; text-decoration: none; }
+        .btn-compra { border-color: #d91e18; color: #d91e18; }
+        .btn-venda { border-color: #26a65b; color: #26a65b; }
+        .btn-ajuste { border-color: #87d37c; color: #87d37c; }
+        .search-container { float: right; margin-right: 50px; }
+        .search-bar { padding: 8px; border-radius: 20px; border: 2px solid #ccc; width: 250px; }
+
+        table { width: 95%; margin: 20px auto; border-collapse: collapse; background: white; }
+        th { border-bottom: 5px solid #3b4cca; color: #333; padding: 12px; text-align: left; text-transform: uppercase; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; color: #555; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        .alerta-baixo { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="text-decoration: none; color: inherit; font-weight: bold;">VOLTAR</a>
+        <span>NOME DA EMPRESA</span>
+        <div class="search-container">
+            <input type="text" class="search-bar" placeholder="PESQUISAR">
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="btn btn-compra">COMPRA</button>
+        <button class="btn btn-venda">VENDA</button>
+        <button class="btn btn-ajuste">AJUSTE</button>
+    </div>
+
+    <div style="background: white; padding: 20px; margin: 20px auto; width: 90%; border: 2px solid #3b4cca;">
+    <h3>CADASTRAR NOVO PRODUTO (COMPRA)</h3>
+    <form action="/adicionar_produto" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <input type="text" name="nome" placeholder="Nome do Produto" required style="padding: 8px;">
+        <input type="text" name="categoria" placeholder="Categoria/Descrição" style="padding: 8px;">
+        <input type="number" name="quantidade" placeholder="Qtd Inicial" required style="padding: 8px; width: 80px;">
+        <input type="number" step="0.01" name="preco" placeholder="Preço de Venda" required style="padding: 8px; width: 100px;">
+        <button type="submit" style="background-color: #26a65b; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold;">
+            SALVAR NO BANCO
+        </button>
+    </form>
+</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CÓDIGO</th>
+                <th>NOME</th>
+                <th>QUANTIDADE</th>
+                <th>VALOR UNITÁRIO</th>
+                <th>FORNECEDOR</th>
+                <th>DESCRIÇÃO</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-corpo">
+            {% for produto in produtos %}
+            <tr>
+                <td>{{ produto.id }}</td>
+                <td>{{ produto.nome }}</td>
+                <td class="{{ 'alerta-baixo' if produto.quantidade < 5 else '' }}">
+                    {{ produto.quantidade }}
+                </td>
+                <td>R$ {{ produto.preco_venda }}</td>
+                <td>{{ produto.fornecedor_nome }}</td>
+                <td>{{ produto.categoria }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
