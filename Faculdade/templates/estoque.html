@@ -10,7 +10,6 @@
         .btn { padding: 10px 25px; border-radius: 15px; border: 3px solid; font-weight: bold; cursor: pointer; background: white; text-decoration: none; }
         .btn-compra { border-color: #d91e18; color: #d91e18; }
         .btn-venda { border-color: #26a65b; color: #26a65b; }
-        .btn-ajuste { border-color: #87d37c; color: #87d37c; }
         .search-container { float: right; margin-right: 50px; }
         .search-bar { padding: 8px; border-radius: 20px; border: 2px solid #ccc; width: 250px; }
 
@@ -22,59 +21,235 @@
         .alerta-baixo { color: red; font-weight: bold; }
     </style>
 </head>
-<body>
-    <div class="header">
-        <a href="/" style="text-decoration: none; color: inherit; font-weight: bold;">VOLTAR</a>
-        <span>NOME DA EMPRESA</span>
-        <div class="search-container">
-            <input type="text" class="search-bar" placeholder="PESQUISAR">
-        </div>
-    </div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
+    <h2 style="margin: 0; cursor: pointer;" onclick="window.location.href='/'">VOLTAR</h2>
+    <h2 style="margin: 0; flex-grow: 1; text-align: center;">NOME DA EMPRESA</h2>
+    <input type="text" id="inputPesquisa" onkeyup="filtrarProdutos()" placeholder="PESQUISAR PRODUTO..." 
+           style="padding: 8px; border-radius: 20px; border: 1px solid #ccc; width: 250px;">
+</div>
 
-    <div class="nav-buttons">
-        <button class="btn btn-compra">COMPRA</button>
-        <button class="btn btn-venda">VENDA</button>
-        <button class="btn btn-ajuste">AJUSTE</button>
-    </div>
+<hr style="border: 1px solid blue;">
 
-    <div style="background: white; padding: 20px; margin: 20px auto; width: 90%; border: 2px solid #3b4cca;">
+<div style="padding: 20px; display: flex; gap: 10px;">
+    <button class="btn btn-compra" onclick="mostrarCompra()" 
+            style="border: 1px solid red; color: red; background: white; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: bold;">
+        COMPRA
+    </button>
+
+    <button class="btn btn-venda" onclick="mostrarVenda()" 
+            style="border: 1px solid green; color: green; background: white; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: bold;">
+        VENDA
+    </button>
+</div>
+
+<!--    CADASTRO DE COMPRA  -->
+
+    <div id="form-compra" style="display: none; background: white; padding: 20px; margin: 20px auto; width: 90%; border: 2px solid #3b4cca;">
     <h3>CADASTRAR NOVO PRODUTO (COMPRA)</h3>
     <form action="/adicionar_produto" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <input type="text" name="nome" placeholder="Nome do Produto" required style="padding: 8px;">
-        <input type="text" name="categoria" placeholder="Categoria/Descrição" style="padding: 8px;">
-        <input type="number" name="quantidade" placeholder="Qtd Inicial" required style="padding: 8px; width: 80px;">
-        <input type="number" step="0.01" name="preco" placeholder="Preço de Venda" required style="padding: 8px; width: 100px;">
-        <button type="submit" style="background-color: #26a65b; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold;">
-            SALVAR NO BANCO
+        <input type="text" name="nome" placeholder="Nome" required>
+        <input type="text" name="categoria" placeholder="Categoria">
+        <input type="number" name="quantidade" placeholder="Qtd">
+        <input type="number" step="0.01" name="preco" placeholder="Preço">
+        <select name="fornecedor_id" required>
+            <option value="">Fornecedor</option>
+            {% for f in fornecedores %}
+                <option value="{{ f.id }}">{{ f.nome }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" style="background: #3b4cca; color: white;">SALVAR COMPRA</button>
+    </form>
+</div>
+
+<!----  CADASTRAR VENDA     -->  
+
+<div id="form-venda" style="display: none; background: white; padding: 20px; margin: 20px auto; width: 90%; border: 2px solid #26a65b;">
+    <h3 style="color: #26a65b;">REGISTRAR VENDA (SAÍDA)</h3>
+    <form id="form-venda-id" action="" method="POST">
+    <input type="number" name="quantidade" placeholder="Qtd para vender">
+    <button type="submit">Confirmar Venda</button>
+</form>
+    <select name="produto_id" required>
+        <option value="">Selecione...</option>
+        {% for p in produtos %}
+            <option value="{{ p.id }}">{{ p.nome }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="number" name="quantidade_venda" required>
+
+    <button type="submit">CONFIRMAR VENDA</button>
+</form>
+</div>
+
+
+<!--    AJUSTE  -->
+
+<div id="form-ajuste" style="display: none; background: #f9f9f9; padding: 20px; border: 2px solid #f39c12; margin: 20px auto; width: 90%;">
+    <h3 style="color: #f39c12;">AJUSTAR PRODUTO</h3>
+    <form id="edit-form" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+
+        <input type="text" name="nome" id="edit-nome" placeholder="Nome" required 
+               style="padding: 10px; border: 1px solid #ccc;">
+
+        <input type="text" name="categoria" id="edit-desc" placeholder="Descrição/Categoria" 
+               style="padding: 10px; border: 1px solid #ccc;">
+
+        <input type="number" name="quantidade" id="edit-qtd" placeholder="Qtd" 
+               style="padding: 10px; width: 80px; border: 1px solid #ccc;">
+
+        <input type="number" step="0.01" name="preco" id="edit-preco" placeholder="Preço" 
+               style="padding: 10px; width: 100px; border: 1px solid #ccc;">
+
+        <select name="fornecedor_id" id="edit-forn" style="padding: 10px; border: 1px solid #ccc;">
+    <option value="">Selecione o Fornecedor</option>
+    {% for f in fornecedores %}
+        <option value="{{ f.id }}">{{ f.nome }}</option>
+    {% endfor %}
+</select>
+
+        <button type="submit" style="background: #f39c12; color: white; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px;">
+            SALVAR ALTERAÇÕES
+        </button>
+
+        <button type="button" onclick="document.getElementById('form-ajuste').style.display='none'" 
+                style="background: #ccc; border: none; padding: 10px; cursor: pointer; border-radius: 4px;">
+            CANCELAR
         </button>
     </form>
 </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>CÓDIGO</th>
-                <th>NOME</th>
-                <th>QUANTIDADE</th>
-                <th>VALOR UNITÁRIO</th>
-                <th>FORNECEDOR</th>
-                <th>DESCRIÇÃO</th>
-            </tr>
-        </thead>
-        <tbody id="tabela-corpo">
-            {% for produto in produtos %}
-            <tr>
-                <td>{{ produto.id }}</td>
-                <td>{{ produto.nome }}</td>
-                <td class="{{ 'alerta-baixo' if produto.quantidade < 5 else '' }}">
-                    {{ produto.quantidade }}
-                </td>
-                <td>R$ {{ produto.preco_venda }}</td>
-                <td>{{ produto.fornecedor_nome }}</td>
-                <td>{{ produto.categoria }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table>
+    <thead>
+        <tr>
+            <th>CÓDIGO</th>
+            <th>NOME</th>
+            <th>QUANTIDADE</th>
+            <th>VALOR UNITÁRIO</th>
+            <th>FORNECEDOR</th>
+            <th>DESCRIÇÃO</th>
+            <th>AÇÕES</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in produtos %} <tr>
+    <td>{{ p.id }}</td>
+    <td>{{ p.nome }}</td>
+    <td>{{ p.quantidade }}</td>
+    <td>R$ {{ p.preco_venda }}</td>
+    <td>{{ p.fornecedor_nome }}</td>
+    <td>{{ p.categoria }}</td> <td style="width: 100px;">
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+            <button type="button" 
+                    onclick="prepararEdicao('{{ p.id }}', '{{ p.nome }}', '{{ p.categoria }}', '{{ p.quantidade }}', '{{ p.preco_venda }}')" 
+                    style="background: #f39c12; color: white; border: none; padding: 4px; cursor: pointer; border-radius: 4px; font-size: 10px; font-weight: bold; width: 100%;">
+                EDITAR
+            </button>
+
+            <a href="{{ url_for('excluir_produto', id=p.id) }}" 
+               onclick="return confirm('Deseja apagar {{ p.nome }}?')"
+               style="background: #e74c3c; color: white; text-decoration: none; padding: 4px; border-radius: 4px; font-size: 10px; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box;">
+                EXCLUIR
+            </a>
+        </div>
+    </td>
+</tr>
+        {% endfor %} </tbody>
+</table>
+
+
+<!--    AQUI COMEÇA O JAVASCRIPT    -->
+
+    <script>
+function mostrarCompra() {
+    document.getElementById('form-compra').style.display = 'block';
+    document.getElementById('form-venda').style.display = 'none';
+    document.getElementById('form-ajuste').style.display = 'none';
+}
+
+function mostrarVenda() {
+    document.getElementById('form-venda').style.display = 'block';
+    document.getElementById('form-compra').style.display = 'none';
+    document.getElementById('form-ajuste').style.display = 'none';
+}
+</script>
+
+<script>
+function prepararEdicao(id, nome, desc, qtd, preco, forn_id) {
+    // 1. Esconde os outros e mostra o de Ajuste
+    document.getElementById('form-compra').style.display = 'none';
+    document.getElementById('form-venda').style.display = 'none';
+    document.getElementById('form-ajuste').style.display = 'block';
+
+    // 2. Preenche os campos básicos
+    document.getElementById('edit-nome').value = nome;
+    document.getElementById('edit-desc').value = desc;
+    document.getElementById('edit-qtd').value = qtd;
+    document.getElementById('edit-preco').value = preco;
+
+    // 3. Define para qual ID os dados serão enviados (Isso evita o erro de método!)
+    document.getElementById('edit-form').action = '/editar_produto/' + id;
+
+    // 4. Seleciona o fornecedor no menu
+    const selectForn = document.getElementById('edit-forn');
+    if (forn_id && forn_id !== 'None' && forn_id !== '') {
+        selectForn.value = forn_id;
+    } else {
+        selectForn.value = ""; 
+    }
+
+    // 5. Rola para cima para o usuário ver o que está fazendo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function mostrarAvisoAjuste() {
+    // Esconde os outros
+    document.getElementById('form-compra').style.display = 'none';
+    document.getElementById('form-venda').style.display = 'none';
+
+    // Mostra o formulário de ajuste (vazio ou com um alerta)
+    document.getElementById('form-ajuste').style.display = 'block';
+    alert("Clique no botão 'EDITAR' ao lado do produto na tabela para carregar os dados!");
+}
+
+
+function filtrarProdutos() {
+    // 1. Pega o valor digitado e transforma em letras minúsculas
+    let input = document.getElementById("inputPesquisa");
+    let filter = input.value.toLowerCase();
+
+    // 2. Pega todas as linhas da tabela (tr)
+    let tabela = document.querySelector("table tbody");
+    let linhas = tabela.getElementsByTagName("tr");
+
+    // 3. Percorre cada linha para ver se o nome combina
+    for (let i = 0; i < linhas.length; i++) {
+        // A coluna do NOME é a segunda (índice 1)
+        let colunaNome = linhas[i].getElementsByTagName("td")[1];
+
+        if (colunaNome) {
+            let textoNome = colunaNome.textContent || colunaNome.innerText;
+
+            // Se o nome contém o que foi digitado, mostra a linha. Senão, esconde.
+            if (textoNome.toLowerCase().indexOf(filter) > -1) {
+                linhas[i].style.display = "";
+            } else {
+                linhas[i].style.display = "none";
+            }
+        }
+    }
+}
+
+
+function prepararVenda(id) {
+    // Esconde os outros e mostra o de venda
+    document.getElementById('form-ajuste').style.display = 'none';
+    document.getElementById('form-venda').style.display = 'block';
+
+    // Define o action dinamicamente com o ID certo!
+    document.getElementById('form-venda-id').action = '/vender_produto/' + id;
+}
+</script>
+
 </body>
 </html>

@@ -5,24 +5,38 @@
     <title>Fornecedores - Eight Sistemas</title>
     <style>
         body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; }
-        .header { background: white; border-bottom: 3px solid #3b4cca; padding: 20px; }
+        .header { background: white; border-bottom: 3px solid #3b4cca; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .container { padding: 40px; }
-        input { padding: 10px; width: 250px; border: 1px solid #ccc; }
-        button { padding: 10px 20px; background: #2ecc71; color: white; border: none; cursor: pointer; font-weight: bold; }
-        table { width: 50%; margin: 20px auto; border-collapse: collapse; background: white; }
+        input { padding: 10px; width: 250px; border: 1px solid #ccc; margin: 5px; }
+        button { padding: 10px 20px; background: #2ecc71; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        .btn-edit { background: #f39c12; font-size: 11px; padding: 5px; width: 100%; margin-bottom: 3px; }
+        .btn-delete { background: #e74c3c; font-size: 11px; padding: 5px; width: 100%; text-decoration: none; display: inline-block; color: white; border-radius: 4px; }
+        table { width: 60%; margin: 20px auto; border-collapse: collapse; background: white; }
         th, td { padding: 12px; border: 1px solid #ddd; }
         th { background: #3b4cca; color: white; }
+        #form-editar-forn { display: none; background: #fff3cd; padding: 20px; border: 1px solid #ffeeba; margin-bottom: 20px; border-radius: 8px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <a href="/" style="float: left; text-decoration: none; font-weight: bold;">VOLTAR</a>
-        <h2>GESTÃO DE FORNECEDORES</h2>
-    </div>
+        <a href="/" style="text-decoration: none; font-weight: bold; color: #3b4cca;">VOLTAR</a>
+        <h2 style="margin: 0;">GESTÃO DE FORNECEDORES</h2>
+        <div style="width: 60px;"></div> </div>
 
     <div class="container">
+        <div id="form-editar-forn">
+            <h3 style="color: #856404;">EDITAR FORNECEDOR</h3>
+            <form id="edit-forn-form" method="POST">
+                <input type="text" name="nome_fornecedor" id="edit-nome-forn" required>
+                <input type="text" name="contato_fornecedor" id="edit-contato-forn" oninput="maskTelefone(this)" maxlength="15" required>
+                <button type="submit" style="background: #f39c12;">SALVAR ALTERAÇÕES</button>
+                <button type="button" onclick="fecharEdicao()" style="background: #95a5a6;">CANCELAR</button>
+            </form>
+        </div>
+
         <form action="/cadastrar_fornecedor" method="POST">
-            <input type="text" name="nome_fornecedor" placeholder="Nome do Fornecedor (ex: Intel)" required>
+            <input type="text" name="nome_fornecedor" placeholder="Nome do Fornecedor" required>
+            <input type="text" name="contato_fornecedor" placeholder="Telefone ou E-mail" oninput="maskTelefone(this)" maxlength="15" required>
             <button type="submit">CADASTRAR</button>
         </form>
 
@@ -30,18 +44,64 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>NOME DO FORNECEDOR</th>
+                    <th>NOME</th>
+                    <th>CONTATO</th>
+                    <th style="width: 100px;">AÇÕES</th>
                 </tr>
             </thead>
             <tbody>
-                {% for f in fornecedores %}
-                <tr>
-                    <td>{{ f.id }}</td>
-                    <td>{{ f.nome }}</td>
-                </tr>
-                {% endfor %}
+               {% for f in fornecedores %}
+<tr>
+    <td>{{ f.id }}</td>
+    <td>{{ f.nome }}</td>
+    <td>{{ f.contato }}</td>
+    <td>
+        <button class="btn-edit" onclick="prepararEdicaoForn('{{ f.id }}', '{{ f.nome }}', '{{ f.contato }}')">EDITAR</button>
+
+        <button class="btn-delete" 
+                onclick="confirmarExclusaoFornecedor('{{ f.id }}', '{{ f.nome }}', '{{ f.produtos|map(attribute=nome)|list|join(', ') }}')">
+            EXCLUIR
+        </button>
+    </td>
+</tr>
+{% endfor %}
             </tbody>
         </table>
     </div>
+    
+
+
+        <!--    JAVASCRIPT -->
+
+    <script>
+    // Máscara de Telefone: (00) 0 0000-0000
+    function maskTelefone(v) {
+        v.value = v.value
+            .replace(/\D/g, "")
+            .replace(/^(\d{2})(\d)/g, "($1) $2")
+            .replace(/(\d)(\d{4})$/, "$1-$2");
+    }
+
+    function prepararEdicaoForn(id, nome, contato) {
+        document.getElementById('form-editar-forn').style.display = 'block';
+        document.getElementById('edit-nome-forn').value = nome;
+        document.getElementById('edit-contato-forn').value = contato;
+        document.getElementById('edit-forn-form').action = '/editar_fornecedor/' + id;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function fecharEdicao() {
+        document.getElementById('form-editar-forn').style.display = 'none';
+    }
+
+    function confirmarExclusaoFornecedor(id, nome) {
+    // REPARA BEM: Começa e termina com  (crase)
+    const mensagem = `ATENÇÃO: Ao excluir o fornecedor "${nome}", todos os produtos vinculados a ele ficarão SEM FORNECEDOR.\n\nDeseja continuar?`;
+
+    if (confirm(mensagem)) {
+        window.location.href = '/excluir_fornecedor/' + id;
+    }
+}
+</script>
 </body>
 </html>

@@ -21,9 +21,9 @@ CREATE TABLE produtos (
     nome VARCHAR(50),
     categoria VARCHAR(50),
     quantidade INT DEFAULT 0,
-    estoque_minimo INT DEFAULT 5, -- Para os alertas!
-    preco_custo DECIMAL(10,2),    -- Necessário para calcular o LUCRO no Dashboard
-    preco_venda DECIMAL(10,2),    -- O teu "Valor Unitário"
+    estoque_minimo INT DEFAULT 5, 
+    preco_custo DECIMAL(10,2),    
+    preco_venda DECIMAL(10,2),    
     fornecedor_id INT,
     descricao TEXT,
     FOREIGN KEY(fornecedor_id) REFERENCES fornecedores(id)
@@ -32,9 +32,11 @@ CREATE TABLE produtos (
 CREATE TABLE movimentacoes_estoque (
     id INT AUTO_INCREMENT PRIMARY KEY,
     produto_id INT,
-    tipo ENUM('entrada', 'saida'),
-    quantidade INT,
-    origem ENUM('compra', 'venda', 'ajuste'),
+    tipo ENUM('entrada', 'saida') NOT NULL,
+    quantidade INT NOT NULL,
+    origem ENUM('compra', 'venda', 'ajuste') NOT NULL,
+    valor_unitario DECIMAL(10, 2), 
+    custo_unitario DECIMAL(10, 2), 
     data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(produto_id) REFERENCES produtos(id) ON DELETE CASCADE
 );
@@ -47,3 +49,6 @@ CREATE TABLE alertas (
     resolvido BOOLEAN DEFAULT FALSE,
     FOREIGN KEY(produto_id) REFERENCES produtos(id)
 );
+
+
+
