@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import urllib.parse
 from datetime import datetime
+import sqlite3
 
 app = Flask(__name__)
 app.secret_key = "eight_sistemas_2026"
@@ -12,9 +13,10 @@ host = 'localhost'
 banco = 'projeto'
 senha_segura = urllib.parse.quote_plus(senha)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{usuario}:{senha_segura}@{host}/{banco}'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
 
 #   ----------
 #   CLASSES
@@ -54,6 +56,10 @@ class Movimentacao(db.Model):
     valor_unitario = db.Column(db.Numeric(10, 2))
     custo_unitario = db.Column(db.Numeric(10, 2))
     data_movimentacao = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+
+with app.app_context():
+    db.create_all()
 
 
 #   ------------
@@ -345,4 +351,4 @@ def movimento():
 
 if __name__ == '__main__':
     print("Sistema Eight Sistemas Iniciado!")
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
