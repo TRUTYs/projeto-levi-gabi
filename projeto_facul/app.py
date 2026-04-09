@@ -157,12 +157,23 @@ def excluir_fornecedor(id):
 
 @app.route('/adicionar_produto', methods=['POST'])
 def adicionar_produto():
-    nome = request.form.get('nome')
-    categoria = request.form.get('categoria')
-    quantidade = int(request.form.get('quantidade', 0))
-    preco_venda = float(request.form.get('preco_venda', 0))
-    preco_custo = float(request.form.get('preco_custo', 0))
-    forn_id = request.form.get('fornecedor_id')
+    nome       = request.form.get('nome', '').strip()
+    categoria  = request.form.get('categoria', '').strip()
+    qtd_raw    = request.form.get('quantidade', '').strip()
+    forn_id    = request.form.get('fornecedor_id')
+
+    # Valida campos obrigatórios
+    if not nome or qtd_raw == '':
+        flash('Campos obrigatórios não preenchidos.', 'erro')
+        return redirect(url_for('estoque'))
+
+    try:
+        quantidade  = int(qtd_raw)
+        preco_venda = float(request.form.get('preco_venda', 0) or 0)
+        preco_custo = float(request.form.get('preco_custo', 0) or 0)
+    except ValueError:
+        flash('Campos obrigatórios não preenchidos.', 'erro')
+        return redirect(url_for('estoque'))
 
     produto_existente = Produto.query.filter_by(nome=nome).first()
 
@@ -171,7 +182,7 @@ def adicionar_produto():
         produto_existente.preco_venda = preco_venda
         produto_existente.preco_custo = preco_custo
         db.session.commit()
-        print(f"Estoque atualizado: {nome} agora tem {produto_existente.quantidade}")
+        flash(f'Estoque de "{nome}" atualizado com sucesso!', 'sucesso')
     else:
         novo_produto = Produto(
             nome=nome,
@@ -183,9 +194,10 @@ def adicionar_produto():
         )
         db.session.add(novo_produto)
         db.session.commit()
-        print(f"Novo produto cadastrado: {nome}")
+        flash(f'Produto "{nome}" cadastrado com sucesso!', 'sucesso')
 
     return redirect(url_for('estoque'))
+
 
 
 #   -------
@@ -224,22 +236,39 @@ def comprar_produto(id):
 @app.route('/editar_produto/<int:id>', methods=['POST'])
 def editar_produto(id):
     produto = Produto.query.get(id)
-    if produto:
-        forn_id = request.form.get('fornecedor_id')
+    if not produto:
+        flash('Produto não encontrado.', 'erro')
+        return redirect(url_for('estoque'))
 
-        produto.nome = request.form.get('nome')
-        produto.categoria = request.form.get('categoria')
-        produto.quantidade = int(request.form.get('quantidade', 0))
-        produto.preco_venda = float(request.form.get('preco_venda', 0))
-        produto.preco_custo = float(request.form.get('preco_custo', 0))
+    nome    = request.form.get('nome', '').strip()
+    qtd_raw = request.form.get('quantidade', '').strip()
+    forn_id = request.form.get('fornecedor_id')
 
-        if forn_id == "" or forn_id == "None":
-            produto.fornecedor_id = None
-        else:
-            produto.fornecedor_id = int(forn_id)
+    if not nome or qtd_raw == '':
+        flash('Campos obrigatórios não preenchidos.', 'erro')
+        return redirect(url_for('estoque'))
 
-        db.session.commit()
-        print(f"Produto {id} atualizado com sucesso!")
+    try:
+        quantidade  = int(qtd_raw)
+        preco_venda = float(request.form.get('preco_venda', 0) or 0)
+        preco_custo = float(request.form.get('preco_custo', 0) or 0)
+    except ValueError:
+        flash('Campos obrigatórios não preenchidos.', 'erro')
+        return redirect(url_for('estoque'))
+
+    if quantidade < 0:
+        flash('O estoque não permite quantidade negativa.', 'erro')
+        return redirect(url_for('estoque'))
+
+    produto.nome      = nome
+    produto.categoria = request.form.get('categoria', '').strip()
+    produto.quantidade  = quantidade
+    produto.preco_venda = preco_venda
+    produto.preco_custo = preco_custo
+    produto.fornecedor_id = None if (forn_id in ('', 'None')) else int(forn_id)
+
+    db.session.commit()
+    flash(f'Produto "{nome}" atualizado com sucesso!', 'sucesso')
 
     return redirect(url_for('estoque'))
 

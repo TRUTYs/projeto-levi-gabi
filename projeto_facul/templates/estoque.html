@@ -5,31 +5,31 @@
     <title>Estoque - Eight Sistemas</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
+        body { font-family: sans-serif; margin: 0; background-color: #013a63; }
 
         .header {
-            background-color: white;
+            background-color: #3b4cca;
             border-bottom: 3px solid #3b4cca;
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .header a { text-decoration: none; font-weight: bold; color: #3b4cca; }
-        .header h2 { margin: 0; }
+        .header a { text-decoration: none; font-weight: bold; color: #f4f4f4; }
+        .header h2 { margin: 0; color: #f4f4f4;}
 
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 15px 30px;
-            background: white;
+            background: #f4f4f4;
             border-bottom: 1px solid #ddd;
             flex-wrap: wrap;
             gap: 10px;
         }
 
-        .btn { padding: 10px 22px; border-radius: 20px; border: 2px solid; font-weight: bold; cursor: pointer; background: white; font-size: 14px; }
+        .btn { padding: 10px 22px; border-radius: 20px; border: 2px solid; font-weight: bold; cursor: pointer; background: #f4f4f4; font-size: 14px; }
         .btn-compra { border-color: #3b4cca; color: #3b4cca; }
         .btn-compra:hover { background: #3b4cca; color: white; }
         .btn-venda { border-color: #26a65b; color: #26a65b; }
@@ -170,7 +170,8 @@
         </div>
         <div style="display:flex; flex-direction:column;">
             <label style="font-size:12px; color:#666;">Quantidade</label>
-            <input type="number" name="quantidade" placeholder="Qtd" min="0" style="width:80px;">
+            <input type="number" name="quantidade" placeholder="Qtd" min="0" style="width:80px;" 
+            oninput="if (this.value < 0) this.value = 0;">
         </div>
         <div style="display:flex; flex-direction:column;">
             <label style="font-size:12px; color:#666;">Preço de Custo (R$)</label>
@@ -198,7 +199,8 @@
 <div id="form-venda" class="form-panel venda-panel">
     <h3 style="color:#26a65b;" id="titulo-venda">Registrar Venda</h3>
     <form id="form-venda-final" method="POST" style="display:flex; gap:10px; align-items:center;">
-        <input type="number" name="quantidade" placeholder="Quantidade" required min="1" style="width:130px;">
+        <input type="number" name="quantidade" placeholder="Quantidade" required min="1" style="width:130px;"
+        oninput="if (this.value < 1) this.value = 1;">
         <button type="submit" class="btn-submit verde">CONFIRMAR VENDA</button>
         <button type="button" class="btn-cancelar" onclick="fecharTodos()">CANCELAR</button>
     </form>
@@ -208,7 +210,8 @@
 <div id="form-reposicao" class="form-panel">
     <h3 style="color:#3b4cca;" id="titulo-reposicao">Repor Estoque</h3>
     <form id="form-reposicao-final" method="POST" style="display:flex; gap:10px; align-items:center;">
-        <input type="number" name="quantidade" placeholder="Quantidade" required min="1" style="width:130px;">
+        <input type="number" name="quantidade" placeholder="Quantidade" required min="1" style="width:130px;"
+        oninput="if (this.value < 1) this.value = 1;">
         <button type="submit" class="btn-submit azul">CONFIRMAR COMPRA</button>
         <button type="button" class="btn-cancelar" onclick="fecharTodos()">CANCELAR</button>
     </form>
@@ -228,7 +231,8 @@
         </div>
         <div style="display:flex; flex-direction:column;">
             <label style="font-size:12px; color:#666;">Quantidade</label>
-            <input type="number" name="quantidade" id="edit-qtd" style="width:80px;">
+            <input type="number" name="quantidade" id="edit-qtd" min="0"
+       oninput="if (this.value < 0) this.value = 0;">
         </div>
         <div style="display:flex; flex-direction:column;">
             <label style="font-size:12px; color:#666;">Preço de Custo (R$)</label>

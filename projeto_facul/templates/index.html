@@ -8,23 +8,30 @@
             font-family: sans-serif; 
             margin: 0; 
             text-align: center; 
-            background-color: #f4f4f4;
+            background-color: #012a4a;
         }
 
         .header { 
-            background-color: white;
+            background-color: #3b4cca;
             border-bottom: 3px solid #3b4cca; 
-            padding: 20px 50px; 
+            padding: 20px 30px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            gap: 10px;
+            text-align: center;
         }
 
-        .logo { 
-            width: 40px; 
-            height: 40px; 
-            border: 3px solid #3b4cca; 
-            border-radius: 50%; 
+        
+
+        .gestao{
+            margin-left: auto;
+
+        }
+
+        .titulo{
+            margin-right: auto;
+            
         }
 
         .menu-container { 
@@ -37,7 +44,8 @@
         .btn-card {
             width: 220px; 
             height: 140px;
-            border: 5px solid black;
+            border: 2px solid #222;
+            border-radius: 10px;
             display: flex; 
             align-items: center; 
             justify-content: center;
@@ -58,22 +66,24 @@
 
         .footer { 
             margin-top: 150px; 
-            color: #666; 
+            color: #f4f4f4; 
             font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo"></div>
-        <span style="font-weight: bold;">EIGHT SISTEMAS</span>
-        <span style="color: #3b4cca; font-weight: bold;">GESTÃO DE ESTOQUE</span>
+        <div class="logo">
+            <div id="logo"></div>
+        </div>
+        <span class = "titulo" style = "color: #f4f4f4; font-weight: bold;">EIGHT SISTEMAS</span>
+        <span class = "gestao" style = "color: #f4f4f4; font-weight: bold;">GESTÃO DE ESTOQUE</span>
     </div>
 
     <div class="menu-container">
-        <a href="/estoque"     class="btn-card laranja">ESTOQUE</a>
-        <a href="/movimento"   class="btn-card azul">MOVIMENTO &amp; DASHBOARD</a>
-        <a href="/fornecedores" class="btn-card verde">FORNECEDORES</a>
+        <a href="/estoque"     class="btn-card laranja">📦ESTOQUE</a>
+        <a href="/movimento"   class="btn-card azul">📊MOVIMENTO &amp; DASHBOARD</a>
+        <a href="/fornecedores" class="btn-card verde">🚚FORNECEDORES</a>
     </div>
 
     <div class="footer">EIGHT SISTEMAS &copy; 2026</div>
