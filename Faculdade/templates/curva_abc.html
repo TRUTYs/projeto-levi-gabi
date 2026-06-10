@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Curva ABC — Eight Sistemas{% endblock %}
+{% block nav_curva_abc %}active{% endblock %}
+{% block page_title %}Curva ABC{% endblock %}
+{% block page_sub %}Classificação de produtos por impacto na receita{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ── Filtros ─────────────────────────────────────────────── */
+  .filtro-bar   { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .filtro-label { font-size:12px; color:var(--muted); margin-right:2px; }
+  .filtro-btn   {
+    padding:6px 16px; border-radius:8px; border:1px solid var(--border);
+    background:var(--card); color:var(--muted); font-size:12.5px; font-weight:500;
+    font-family:var(--font); cursor:pointer; text-decoration:none; transition:all .14s;
+  }
+  .filtro-btn:hover { border-color:var(--blue); color:var(--blue); }
+  .filtro-btn.ativo { background:var(--blue); border-color:var(--blue); color:#fff; }
+
+  /* ── Cards de classe ────────────────────────────────────── */
+  .abc-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:13px; }
+
+  .abc-card {
+    border-radius:var(--radius); padding:20px 22px;
+    display:flex; flex-direction:column; gap:10px;
+    border:1px solid var(--border);
+  }
+  .abc-card.a { background:#0d1f3c; border-color:#1e3a6e; }
+  .abc-card.b { background:#1a1230; border-color:#3b2470; }
+  .abc-card.c { background:#0c1f18; border-color:#0d3d2a; }
+
+  .abc-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:36px; border-radius:10px;
+    font-size:18px; font-weight:700;
+  }
+  .abc-badge.a { background:rgba(59,130,246,.18); color:#60a5fa; }
+  .abc-badge.b { background:rgba(139,92,246,.18);  color:#a78bfa; }
+  .abc-badge.c { background:rgba(16,185,129,.18);  color:#34d399; }
+
+  .abc-card-title { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+  .abc-card-count { font-size:32px; font-weight:500; line-height:1; }
+  .abc-card-count.a { color:#60a5fa; }
+  .abc-card-count.b { color:#a78bfa; }
+  .abc-card-count.c { color:#34d399; }
+  .abc-card-desc { font-size:12px; color:var(--muted2); line-height:1.5; }
+  .abc-card-range {
+    font-size:11px; font-weight:600; padding:3px 10px; border-radius:99px;
+    display:inline-block; margin-top:2px;
+  }
+  .abc-card-range.a { background:rgba(59,130,246,.15);  color:#93c5fd; }
+  .abc-card-range.b { background:rgba(139,92,246,.15);  color:#c4b5fd; }
+  .abc-card-range.c { background:rgba(16,185,129,.15);  color:#6ee7b7; }
+
+  /* ── Gráfico de barras empilhadas ───────────────────────── */
+  .chart-abc-wrap {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:20px 22px;
+  }
+  .chart-abc-title { font-size:13px; font-weight:600; margin-bottom:16px; color:var(--text); }
+  .stacked-bar-wrap { display:flex; flex-direction:column; gap:10px; }
+  .stacked-row { display:flex; align-items:center; gap:12px; }
+  .stacked-label { font-size:12px; color:var(--muted); width:90px; text-align:right; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stacked-track { flex:1; background:var(--bg); border-radius:99px; height:10px; overflow:hidden; }
+  .stacked-fill  { height:100%; border-radius:99px; transition:width .6s ease; }
+  .stacked-val   { font-size:11px; color:var(--muted2); width:80px; flex-shrink:0; font-family:var(--mono); }
+  .chart-legend  { display:flex; gap:16px; margin-bottom:14px; }
+  .legend-item   { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+  .legend-dot    { width:8px; height:8px; border-radius:50%; }
+
+  /* ── Tabela ─────────────────────────────────────────────── */
+  .badge-a { background:rgba(59,130,246,.15);  color:#93c5fd; font-weight:700; }
+  .badge-b { background:rgba(139,92,246,.15);  color:#c4b5fd; font-weight:700; }
+  .badge-c { background:rgba(16,185,129,.15);  color:#6ee7b7; font-weight:700; }
+
+  .acum-track { background:var(--bg); border-radius:99px; height:4px; overflow:hidden; width:80px; display:inline-block; vertical-align:middle; margin-left:6px; }
+  .acum-fill  { height:100%; border-radius:99px; }
+  .acum-a     { background:#3b82f6; }
+  .acum-b     { background:#8b5cf6; }
+  .acum-c     { background:#10b981; }
+
+  .empty-abc {
+    padding:64px; text-align:center; color:var(--muted); font-size:13.5px;
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+  }
+  .empty-abc svg { width:48px; height:48px; opacity:.25; }
+  .empty-abc p   { max-width:320px; line-height:1.6; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Filtros de período -->
+<div class="filtro-bar">
+  <span class="filtro-label">📅 Período:</span>
+  {% for valor, label in [('mensal','Mensal'),('trimestral','Trimestral'),('semestral','Semestral'),('anual','Anual')] %}
+  <a href="{{ url_for('curva_abc.curva_abc', filtro=valor) }}"
+     class="filtro-btn {{ 'ativo' if filtro == valor else '' }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if itens %}
+
+<!-- Cards de resumo por classe -->
+<div class="abc-cards">
+  <div class="abc-card a">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="abc-badge a">A</div>
+      <div>
+        <div class="abc-card-title">Classe A</div>
+        <span class="abc-card-range a">0 % → 80 % da receita</span>
+      </div>
+    </div>
+    <div class="abc-card-count a">{{ totais.A }} <span style="font-size:14px;color:var(--muted)">produto(s)</span></div>
+    <div class="abc-card-desc">Alta prioridade. Poucos itens que geram a maior parte da receita. Exigem reposição imediata e atenção máxima no estoque.</div>
+  </div>
+
+  <div class="abc-card b">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="abc-badge b">B</div>
+      <div>
+        <div class="abc-card-title">Classe B</div>
+        <span class="abc-card-range b">80 % → 95 % da receita</span>
+      </div>
+    </div>
+    <div class="abc-card-count b">{{ totais.B }} <span style="font-size:14px;color:var(--muted)">produto(s)</span></div>
+    <div class="abc-card-desc">Importância intermediária. Monitoramento regular. Reposição planejada conforme demanda histórica.</div>
+  </div>
+
+  <div class="abc-card c">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="abc-badge c">C</div>
+      <div>
+        <div class="abc-card-title">Classe C</div>
+        <span class="abc-card-range c">95 % → 100 % da receita</span>
+      </div>
+    </div>
+    <div class="abc-card-count c">{{ totais.C }} <span style="font-size:14px;color:var(--muted)">produto(s)</span></div>
+    <div class="abc-card-desc">Baixa prioridade. Muitos itens, baixo impacto financeiro. Estoque enxuto, revisão periódica.</div>
+  </div>
+</div>
+
+<!-- Gráfico de participação por produto (top 15) -->
+<div class="chart-abc-wrap">
+  <div class="chart-abc-title">Participação individual na receita — Top {{ [itens|length, 15]|min }} produtos</div>
+  <div class="chart-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Classe A</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>Classe B</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Classe C</div>
+  </div>
+  <div class="stacked-bar-wrap">
+    {% for item in itens[:15] %}
+    {% set cor = '#3b82f6' if item.classe == 'A' else ('#8b5cf6' if item.classe == 'B' else '#10b981') %}
+    <div class="stacked-row">
+      <div class="stacked-label" title="{{ item.nome }}">{{ item.nome }}</div>
+      <div class="stacked-track">
+        <div class="stacked-fill" style="width:{{ item.pct_item }}%;background:{{ cor }}"></div>
+      </div>
+      <div class="stacked-val">{{ "%.1f"|format(item.pct_item) }}%</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Tabela completa -->
+<div class="tcard">
+  <div class="tcard-header">
+    <span class="tcard-title">Classificação completa — {{ itens|length }} produto(s) com vendas no período</span>
+    <span class="text-muted" style="font-size:12px;">Receita total: R$ {{ "%.2f"|format(receita_total) }}</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Produto</th>
+        <th>Categoria</th>
+        <th>Qtd. Vendida</th>
+        <th>Receita (R$)</th>
+        <th>% do Total</th>
+        <th>% Acumulado</th>
+        <th>Classe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in itens %}
+      <tr>
+        <td class="mono">{{ item.rank }}</td>
+        <td class="fw500">{{ item.nome }}</td>
+        <td>
+          <span style="font-size:11px;background:var(--card2);border:1px solid var(--border);padding:2px 8px;border-radius:99px;color:var(--muted);">
+            {{ item.categoria }}
+          </span>
+        </td>
+        <td>{{ item.qtd_vendida }}</td>
+        <td class="mono">{{ "%.2f"|format(item.receita) }}</td>
+        <td class="mono">{{ "%.2f"|format(item.pct_item) }}%</td>
+        <td>
+          <span class="mono">{{ "%.2f"|format(item.pct_acum) }}%</span>
+          <span class="acum-track">
+            <span class="acum-fill acum-{{ item.classe|lower }}" style="width:{{ item.pct_acum }}%"></span>
+          </span>
+        </td>
+        <td>
+          <span class="badge-status badge-{{ item.classe|lower }}">{{ item.classe }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+
+<!-- Estado vazio -->
+<div class="tcard">
+  <div class="empty-abc">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    <p>Nenhuma venda registrada no período <strong>{{ filtro }}</strong>.<br>
+    Registre vendas no módulo de Estoque para que a curva seja gerada automaticamente.</p>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
